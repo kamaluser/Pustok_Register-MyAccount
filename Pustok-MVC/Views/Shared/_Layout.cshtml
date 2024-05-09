@@ -221,8 +221,17 @@
                             <div class="main-navigation flex-lg-right">
                                 <div class="cart-widget">
                                     <div class="login-block">
-                                        <a asp-controller="account" asp-action="login" class="font-weight-bold">Login</a> <br>
-                                        <span>or</span><a asp-controller="account" asp-action="register">Register</a>
+                                        @if (User.Identity.IsAuthenticated)
+                                        {
+                                            <a asp-action="profile" asp-controller="account" class="font-weight-bold">@User.Identity.Name</a> <br>
+                                            <a asp-action="logout" asp-controller="account">Log out</a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="login" asp-controller="account" class="font-weight-bold">Login</a> <br>
+                                            <span>or</span>
+                                            <a asp-action="register" asp-controller="account">Register</a>
+                                        }
                                     </div>
                                     <div class="cart-block">
                                         <div class="cart-total">

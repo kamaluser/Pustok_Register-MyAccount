@@ -53,7 +53,7 @@ namespace Pustok_MVC.Controllers
 
 			await _signInManager.SignInAsync(user, true);
 
-			return RedirectToAction("myaccount","account");
+			return RedirectToAction("profile","account");
 		}
 
 
@@ -63,9 +63,11 @@ namespace Pustok_MVC.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Login(MemberLoginModel model)
+		public async Task<IActionResult> Login(MemberLoginModel model, string? returnUrl)
 		{
-			AppUser user = await _userManager.FindByNameAsync(model.UserName);
+			if ((!ModelState.IsValid)) return View();
+
+			AppUser? user = await _userManager.FindByNameAsync(model.UserName);
 
 			if (user == null)
 			{
@@ -73,19 +75,33 @@ namespace Pustok_MVC.Controllers
 				return View();
 			}
 
-			var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
+			var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, true);
 
-            if (!result.Succeeded)
+			if (result.IsLockedOut)
+			{
+				ModelState.AddModelError("", "You are locked out for 5 minutes!");
+				return View();
+			}
+
+            else if (!result.Succeeded)
             {
                 ModelState.AddModelError("", "UserName or Password incorrect");
                 return View();
             }
 
-			return RedirectToAction("index","home");
+			return returnUrl!=null ? Redirect(returnUrl) : RedirectToAction("index","home");
+
+		}
+
+
+		public async Task<IActionResult> Logout()
+		{
+			await _signInManager.SignOutAsync();
+			return RedirectToAction("Index", "Home");
 		}
 
         [Authorize]
-        public async Task<IActionResult> MyAccount()
+        public async Task<IActionResult> Profile()
         {
             if (!User.Identity.IsAuthenticated)
             {
